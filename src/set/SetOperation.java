@@ -15,12 +15,21 @@ public class SetOperation {
 		System.out.println("Hello World!");
 		
 		
-		BufferedImage a = loadImage("C:\\Users\\Dr.Manhattan\\eclipse-workspace\\Darwinin\\4D/motion1.JPG");
+		BufferedImage a = loadImage("C:\\Users\\Dr.Manhattan\\eclipse-workspace\\Darwinin\\test/test8.JPG");
 		BufferedImage b = loadImage("C:\\Users\\Dr.Manhattan\\eclipse-workspace\\Darwinin\\4D/motion4.JPG");
 
-		int[][] shash = intersectIMG(a,b,!true);
 		
-		new display(shashtoIMG(shash , a.getWidth(), a.getHeight()));
+		
+		Set s = new Set(a, SetType.RGB , new Point(43,35));
+		Point max = findHighestFrequency( s.getShash() , b.getWidth() );		System.out.println(max.show() );
+		Set s2 = new Set(a, SetType.RGB , new Point(43,35));
+		
+		clusterTo(s,14);
+		clusterWithFrequencyTo(s2, 30);
+		
+		BufferedImage bimg = SettoIMG(s);		new display(bimg);
+		BufferedImage bimg2 = SettoIMG(s2);		new display(bimg2);
+		
 		
 	}
 	
@@ -32,6 +41,14 @@ public class SetOperation {
 	
 	
 	
+	
+	/**
+	 * 
+	 * Calls the private method in charge of the clustering depending on the SetType of the set gicen in parameter
+	 * 
+	 * @param s the set that must be clustered
+	 * @param threshold the value defining the recursivity of the set
+	 */
 	public static void clusterTo(Set s , double threshold) {
 		
 		if(s.getType() == SetType.XY) {
@@ -48,13 +65,28 @@ public class SetOperation {
 	
 	
 	
+	/**Call the private method in charge of clustering with additional condition on the frequency of each color, depending on the type of set (only support RGB set atm)
+	 * 
+	 * @param s the set that must be clustered
+	 * @param threshold the value defining the recursivity of the set
+	 */
+	public static void clusterWithFrequencyTo(Set s , double threshold) {
+		if(s.getType() == SetType.RGB ) {
+			clusterRGBwithFrequencyTo(s, threshold);
+		}
+	}
 	
 	
 	
 	
 	
 	
-	
+	/**
+	 * Calls the private method responsible for finding the expected color, depends on the SetType of the set passed as argument
+	 * 
+	 * @param s the set for which we want the expected color
+	 * @return the Point representing the expected color
+	 */
 	public static Point expectedSetinRGB(Set s) {
 		
 		
@@ -75,8 +107,12 @@ public class SetOperation {
 	
 	
 	
-	
-	
+	/**
+	 * Calls the private method responsible for finding the variance of the color, depends on the SetType of the set passed as argument
+	 * 
+	 * @param s the set for which we want the variance of the  color
+	 * @return the Point representing the variance of the color
+	 */
 	public static Point varianceSetinRGB(Set s) {
 		
 		
@@ -100,9 +136,16 @@ public class SetOperation {
 
 
 
-
-
-
+	/**
+	 * Find the intersection in the color space of the two images passed as arguments and returns a hashtable
+	 * The hashtable contains all the location of the pixel for each color, these location depend on the image
+	 * thus, specify which image the location should be used
+	 * 
+	 * @param bimg1
+	 * @param bimg2
+	 * @param onFirstImg true; the hashtable will contains the location of the color on the first image, false; the hashtable will contains the location of the color on the first image
+	 * @return hashtable (int[][]) containing the intersection with array location depending on the value of param onFirstImg
+	 */
 	public static int[][] intersectIMG( BufferedImage bimg1 , BufferedImage bimg2 , boolean onFirstImg) {
 		
 		int[][] shash1 = IMGtoShash( bimg1 );
@@ -148,9 +191,13 @@ public class SetOperation {
 	
 	
 	
-	
-
-
+	/**
+	 * Cluster the set in RGB space using a recursive definition under the condition x^2+y^2+z^2<=r^2
+	 * x,y,z are the distance for between each color red,green,blue
+	 * 
+	 * @param s the set for which we want the expected color
+	 * @param threshold the radius defining the maximum distance between two colors
+	 */
 	private static void clusterRGBTo(Set s , double threshold) {
 		
 		double tau = Math.sqrt(threshold);
@@ -167,13 +214,13 @@ public class SetOperation {
 				int z=(int)set[start].getZ();
 				
 				for(double i=-Math.floor(tau);i<=Math.floor(tau);i++) {
-					for(double j=-Math.sqrt( Math.pow(tau,2)-(i*i) );j<=Math.sqrt( Math.pow(tau,2)-(i*i) );j++) {
-						for(double k=-Math.sqrt( Math.pow(tau,2)-(i*i)-(j*j) );k<=Math.sqrt( Math.pow(tau,2)-(i*i)-(j*j) );k++) {
+					for(double j=-Math.floor(tau);j<=Math.floor(tau);j++) {
+						for(double k=-Math.floor(tau);k<=Math.floor(tau);k++) {
 							
 							if((x+i)>=0  &&  (x+i)<256  &&  (y+j)>=0  &&  (y+j)<256  &&  (z+k)>=0  &&  (z+k)<256) {
 								int hashCode=new Color((int)(x+i), (int)(y+j), (int)(z+k)).hashCode();
 								
-								if(shash[hashCode+16777256]!=null  &&  Math.sqrt(Math.pow(i,2)+Math.pow(j,2)+Math.pow(k,2))<Math.sqrt(threshold)  ) {//&&  setRGB[start].getW()>hashColor[hashCode+16777256]
+								if(shash[hashCode+16777256]!=null  &&  Math.sqrt(Math.pow(i,2)+Math.pow(j,2)+Math.pow(k,2))<Math.sqrt(threshold)  ) {  // The condition for adding a point: distance of color<threshold
 									set[end]=new Point(x+i, y+j, z+k, shash[hashCode+16777256]);
 									shash[hashCode+16777256]=null;
 									end++;
@@ -209,19 +256,80 @@ public class SetOperation {
 	
 	
 	
+	/**
+	 * Cluster the set in RGB space using a recursive definition under the condition x^2+y^2+z^2<=r^2 AND an additional condition requiring that the color must have a lower frequency than the previous one
+	 * x,y,z are the distance for between each color red,green,blue
+	 * 
+	 * @param s the set for which we want the expected color
+	 * @param threshold the radius defining the maximum distance between two colors
+	 */
+	private static void clusterRGBwithFrequencyTo(Set s , double threshold) {
+		
+		double tau = Math.sqrt(threshold);
+		int[][] shash = s.getShash();
+		Point[] set = s.getSet();
+		int end=s.getEnd();
+		int start=0;
+
+		if(end!=0) {
+			while(start<end) {
+				
+				int x=(int)set[start].getX();
+				int y=(int)set[start].getY();
+				int z=(int)set[start].getZ();
+				
+				for(double i=-Math.floor(tau);i<=Math.floor(tau);i++) {
+					for(double j=-Math.sqrt( Math.pow(tau,2)-(i*i) );j<=Math.sqrt( Math.pow(tau,2)-(i*i) );j++) {
+						for(double k=-Math.sqrt( Math.pow(tau,2)-(i*i)-(j*j) );k<=Math.sqrt( Math.pow(tau,2)-(i*i)-(j*j) );k++) {
+							
+							if((x+i)>=0  &&  (x+i)<256  &&  (y+j)>=0  &&  (y+j)<256  &&  (z+k)>=0  &&  (z+k)<256) {
+								int hashCode=new Color((int)(x+i), (int)(y+j), (int)(z+k)).hashCode();
+								
+								if(shash[hashCode+16777256]!=null  &&  Math.sqrt(Math.pow(i,2)+Math.pow(j,2)+Math.pow(k,2))<Math.sqrt(threshold)  &&   shash[hashCode+16777256].length<=set[start].getLoc().length ) {      // The condition for adding a point: distance of color<threshold  AND frequency1<frequency2
+									set[end]=new Point(x+i, y+j, z+k, shash[hashCode+16777256]); 
+									shash[hashCode+16777256]=null;
+									end++;
+								}
+							}
+							
+						}
+					}
+				}
+				
+				start++;
+			}//END while()
+			
+			
+			s.setEnd(end);						//System.out.println(end);
+			s.setThreshold(threshold);
+		}
+		else{
+			System.out.println("Set not initialized");
+		}
+		
+	}
+
+
+
+
+
+
+
+
+
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
+/**
+ * 
+ * Cluster the point in the XY space under the condition that the points must be nearest neighbor AND the distance between their color satisfy 
+ * x^2+y^2+z^2<=r^2, where r is the threshold
+ * 
+ * @param s
+ * @param threshold
+ */
 	private static void clusterXYTo(Set s , double threshold) {
 		
-		BufferedImage original = s.getOriginal();
+		BufferedImage original = s.getImage();
 		Point[] set = s.getSet();
 		int end = s.getEnd();
 		int start = 0;
@@ -236,11 +344,11 @@ public class SetOperation {
 			
 			for(double i=-distanceXY;i<=distanceXY;i++) {
 				for(double j=-distanceXY;j<=distanceXY;j++) {
-					//System.out.println(Point.dist(  new Point(new Color(hashCode)) , new Point(new Color(original.getRGB((int)(x+i), (int)(y+j))))  ));
+																														// The condition for adding a point: nearest neighbor  AND distance of color<threshold
 					if( ( (i+x)>=0  &&  (i+x)<original.getWidth()  &&  j+y>=0  &&  j+y<original.getHeight())  &&  !(i==0  && j==0)  &&  original.getRGB((int)(x+i), (int)(y+j))!=Color.WHITE.hashCode()  &&  Point.dist(  new Point(new Color(hashCode)) , new Point(new Color(original.getRGB((int)(x+i), (int)(y+j))))  )<Math.abs(threshold)) {
 						set[end]=new Point(x+i, y+j , original.getRGB((int)(x+i), (int)(y+j)));
 						original.setRGB( (int)(x+i) , (int)(y+j) , Color.WHITE.hashCode() );
-						end++;//System.out.println(end);
+						end++;
 					}
 
 				}
@@ -268,7 +376,11 @@ public class SetOperation {
 	//          ************************************    secondary methods      ****************************************
 	
 	
-	
+	/**The method calls the private method for turning the set into an image depending on the SetType of the set passed as argument
+	 * 
+	 * @param s the set for which we want to get the image
+	 * @return a bufferedimage of the set
+	 */
 	public static BufferedImage SettoIMG( Set s ) {
 
 		BufferedImage b=null;
@@ -295,20 +407,17 @@ public class SetOperation {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
+	/**Turn the array of point of the set in the XY space into an image
+	 * 
+	 * @param s the set to be drawn
+	 * @return the bufferedimage of the set
+	 */
 	private static BufferedImage XYtoIMG(Set s) {
 		
 		
 		Point[] set = s.getSet();
 		int end = s.getEnd();
-		BufferedImage bimg = makeWhite( s.getOriginal().getWidth() , s.getOriginal().getHeight() );
+		BufferedImage bimg = makeWhite( s.getImage().getWidth() , s.getImage().getHeight() );
 		
 		
 		for(int a=0 ; a<end ; a++) {
@@ -335,12 +444,15 @@ public class SetOperation {
 	
 	
 	
-	
-	
+	/**Turn the array of point of the set in the RGB space into an image
+	 * 
+	 * @param s the set to be drawn
+	 * @return the bufferedimage of the set
+	 */
 	private static BufferedImage RGBtoIMG(Set s) {
 		
 		Point[] set = s.getSet();
-		int W=s.getOriginal().getWidth(), H=s.getOriginal().getHeight();
+		int W=s.getImage().getWidth(), H=s.getImage().getHeight();
 		BufferedImage bimg = makeWhite( W , H );
 		
 		for(int a=0;a<s.getEnd();a++) {
@@ -380,10 +492,16 @@ public class SetOperation {
 	
 	
 	// uses base Width : n = j*W+i  ---> i = n%W , j = (n-i)/W
-	// O( W*H+16777256+W*H*expected(occurence) )
+	// O( W*H+16777256+W*H*frequency )
+	
+	/**transform an image into an hashtable[][] for which the index are the hashcode of the color and the array associated the location in the image of each color
+	 * 
+	 * @param bimg bufferedimage to be made into a hashtable
+	 * @return a hastable
+	 */
 	public static int[][] IMGtoShash(BufferedImage bimg) {
 		
-		System.out.print("Sashing...");
+		//System.out.print("Sashing...");
 		
 		int[][] superHash = new int[16777256][];
 		
@@ -433,7 +551,7 @@ public class SetOperation {
 		}//for(i)
 		
 		
-		System.out.println("...done");
+		//System.out.println("...done");
 		return superHash;
 	}
 	
@@ -449,7 +567,13 @@ public class SetOperation {
 	
 	
 	
-	
+	/**Turns a hashtable into an image
+	 * 
+	 * @param shash the hashtable contains the location of each color in the image
+	 * @param W the width of the image
+	 * @param H the height of the image
+	 * @return the image of the hashtable
+	 */
 	
 	public static BufferedImage shashtoIMG(int[][] shash, int W, int H) {
 		
@@ -482,6 +606,33 @@ public class SetOperation {
 	
 	
 	
+	/**
+	 * 
+	 * @param shash the hashtable to be parsed
+	 * @param W the width of the image associated with the hashtable
+	 * @return the Color with the highest frequency
+	 */
+	public static Point findHighestFrequency(int[][] shash , int W) {
+		
+		
+		int biggestLength = 0;
+		int indexBiggestLength=-1;
+		
+		for(int a=0;a<16777256;a++) {
+			if(shash[a]!=null  &&  shash[a].length>biggestLength) {
+				biggestLength=shash[a].length;
+				indexBiggestLength=a;
+			}
+		}
+		
+		int x=shash[indexBiggestLength][1]%W;
+		int y=(shash[indexBiggestLength][1]-x)/W;
+		
+		return new Point(x,y);
+	}
+	
+	
+	
 	
 	
 	
@@ -493,14 +644,19 @@ public class SetOperation {
 	
 	
 	
+	/**
+	 * 
+	 * @param width the width of the bufferedimage to be returned
+	 * @param height the height of the bufferedimage to be returned
+	 * @return a bufferedimage of white pixel
+	 */
 	
-	
-	public static BufferedImage makeWhite(int wid, int heh) {
+	private static BufferedImage makeWhite(int width, int height) {
 		
-		BufferedImage toRet=new BufferedImage(wid, heh, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage toRet=new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		
-		for(int i=0;i<wid;i++) {
-			for(int j=0;j<heh;j++) {
+		for(int i=0;i<width;i++) {
+			for(int j=0;j<height;j++) {
 				toRet.setRGB(i, j, -1);
 			}
 		}
@@ -512,8 +668,12 @@ public class SetOperation {
 	
 	
 	
-
-	public static BufferedImage makeCopy(BufferedImage bimg) {
+/**Make a copy of the bufferedimage passed as arguments
+ * 
+ * @param bimg the bufferedimage to be copied
+ * @return the dopy of the bufferedimage passes as arguments
+ */
+	private static BufferedImage makeCopy(BufferedImage bimg) {
 		
 		BufferedImage copy=new BufferedImage(bimg.getWidth(), bimg.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		
@@ -532,8 +692,12 @@ public class SetOperation {
 	
 	
 	
-	
-	public static BufferedImage toBufferedImage(Image img){
+/**
+ * 	
+ * @param img the image to be turned into a bufferedimage
+ * @return a bufferedimage generated from the image
+ */
+	private static BufferedImage toBufferedImage(Image img){
 	    if (img instanceof BufferedImage)
 	    {
 	        return (BufferedImage) img;
@@ -564,8 +728,12 @@ public class SetOperation {
 	
 	
 	
-	
-	public static BufferedImage loadImage(String name) {
+	/** Loads an image from the computer and turn it into a bufferedimage
+	 * 
+	 * @param name the location of the image in the computer
+	 * @return the bufferedimage of the image loaded
+	 */
+	private static BufferedImage loadImage(String name) {
 	
 	
 	BufferedImage bimg=null;

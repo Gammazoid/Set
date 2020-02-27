@@ -13,8 +13,11 @@ public class MyMath{
 	
 	
 	
-	//find the expected XY location of a set of point in XY
-	
+	/**Give the expected position in the image (XY-space) for a given set of point having SetType.XY
+	 * 
+	 * @param pts the array of point P( x ,y )
+	 * @return the expected position in the image of the set of point 
+	 */
 	public static Point expectedPointXYinXY(Point[] pts) {
 		
 		double muX=0, muY=0;
@@ -44,8 +47,12 @@ public class MyMath{
 
 	
 	
-	// find the expected value of the color given a set of points in XY
-		
+
+	/**Return the expected color of a set of point having type SetType.XY
+	 * 	
+	 * @param pts an array of point consisting of P( red, green , blue )
+	 * @return the expected color of the set
+	 */
 	public static Point expectedPointXYinRGB(Point[] pts) {
 		
 		double muR=0, muG=0, muB=0;
@@ -88,8 +95,12 @@ public class MyMath{
 	
 	
 	
-	// find the expected location of any one color in XY
-	
+/**Return the expected location in the image (XY-space) of each color present in the set having type RGB
+ * 
+ * @param pts the array of point having P( red ,green , blue)
+ * @param W the width of the image from which the set was generated
+ * @return the expected location of each of the color in the set
+ */
 	public static Point[] expectedPointRGBinXY(Point[] pts , int W) {
 
 		Point[] expected = new Point[pts.length];
@@ -132,8 +143,12 @@ public class MyMath{
 	
 	
 	
-	
-	
+/**Return the expected location in the image (XY-space) of each color present in the set having type RGB
+ * 
+ * @param shash the hashtable of an image
+ * @param W	the width of the image from which the set was generated 
+ * @return the expected location of each of the color in the set
+ */
 	public static Point[] expectedPointRGBinXY(int[][] shash , int W) {
 		
 		Point[] expected = new Point[16777256];
@@ -179,8 +194,11 @@ public class MyMath{
 	
 	
 	
-// Given a set of point in RGB-cube, find the expected value of the set
-	
+/**Return the expected color of a set
+ * 
+ * @param pts the array of point having P( red , green , blue)
+ * @return the Point representing the expected color of a set of color
+ */
 	public static Point expectedPointRGBinRGB(Point[] pts) {
 		
 		
@@ -213,8 +231,23 @@ public class MyMath{
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
 	// using sigma^2 = (1/N)*SUM (Xi-Xavg)
 	// and return sigma, not sigma square
+	
+
+	/**Return the variance position of a set of point having type SetType.XY from sigma^2 = (1/N)*SUM (Xi-Xavg)
+	 * 	
+	 * @param pts an array of point consisting of P( x , y )
+	 * @return the variance position of the set
+	 */
 	
 	public static Point variancePointXYinXY(Point[] pts) {
 		
@@ -245,7 +278,12 @@ public class MyMath{
 	
 	
 	
-	
+
+	/**Return the variance of the colors of a set of point having type SetType.XY from sigma^2 = (1/N)*SUM (Xi-Xavg)
+	 * 	
+	 * @param pts an array of point consisting of P( red, green , blue )
+	 * @return the variance of the set
+	 */
 	
 	public static Point variancePointXYinRGB(Point[] pts) {
 		
@@ -287,7 +325,12 @@ public class MyMath{
 	
 	
 	
-	
+	/**Return the variance location in the image (XY-space) of each color present in the set having type RGB from sigma^2 = (1/N)*SUM (Xi-Xavg)
+	 * 
+	 * @param the array of point representing a set
+	 * @param W	the width of the image from which the set was generated 
+	 * @return the variance of each of the color in the set
+	 */
 	public static Point[] variancePointRGBinXY(Point[] pts , int W) {
 		
 		Point[] mu = expectedPointRGBinXY(pts, W);
@@ -341,7 +384,11 @@ public class MyMath{
 	
 	
 	
-	
+	/**Return the variance of a set of color (type RGB) from sigma^2 = (1/N)*SUM (Xi-Xavg)
+	 * 
+	 * @param pts the array of point having P( red , green , blue)
+	 * @return the Point representing the variance color of a set of color
+	 */
 	
 	public static Point variancePointRGBinRGB(Point[] pts) {
 		

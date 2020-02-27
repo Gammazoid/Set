@@ -100,7 +100,7 @@ public class Point {
 		return this.location;
 	}
 	
-	//OTHERS************************************************************
+	//   *************************************  ADDITIONAL METHOD  ************************************************************
 	
 	
 	public static double dist(Point A, Point B) {
